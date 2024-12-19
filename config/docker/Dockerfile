@@ -7,14 +7,16 @@ WORKDIR /app
 # Sao chép các file package.json và bun.lockb (nếu có)
 COPY package*.json ./
 
-# Cài đặt các phụ thuộc bằng bun
-RUN npm install
 
+# Cài đặt các phụ thuộc bằng npm
 # Sao chép phần còn lại của ứng dụng
+# làm sạch bộ nhớ đệm npm
+RUN npm install --production && \
+    npm rebuild bcrypt --build-from-source && \
+    npm cache clean --force
+    
+
 COPY . .
-
-RUN npm rebuild bcrypt --build-from-source
-
 COPY .env .
 
 # Build ứng dụng
