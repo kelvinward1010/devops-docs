@@ -10,6 +10,7 @@ pipeline {
 
     environment {
         DOCKER_IMAGE = 'kelvinward1010/visualize'
+        VERCEL_TOKEN = credentials('vercel-token')
     }
 
     stages {
@@ -28,6 +29,16 @@ pipeline {
         stage('Build') {
             steps {
                 sh 'npm run build'
+            }
+        }
+
+        stage('Deploy to Vercel') {
+            steps {
+                script {
+                    withCredentials([string(credentialsId: 'vercel-token', variable: 'VERCEL_TOKEN')]) { 
+                        sh 'npx vercel --prod --token $VERCEL_TOKEN --confirm' 
+                    }
+                }
             }
         }
     }
