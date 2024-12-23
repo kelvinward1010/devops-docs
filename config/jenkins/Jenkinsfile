@@ -3,14 +3,14 @@ pipeline {
 
     // Setup in Tools of Manage Jenkins
     tools {
-        nodejs "node_20"
-        jdk "jdk"
-        maven "maven3"
+        nodejs "node_20"  // Cấu hình Node.js phiên bản 20
+        jdk "jdk"         // Cấu hình JDK
+        maven "maven3"    // Cấu hình Maven 3
     }
 
     environment {
         DOCKER_IMAGE = 'kelvinward1010/visualize'
-        VERCEL_TOKEN = credentials('vercel-token')
+        RENDER_API_KEY = credentials('render-api-key')  // Sử dụng API Key của Render từ Jenkins Credentials
     }
 
     stages {
@@ -32,22 +32,33 @@ pipeline {
             }
         }
 
-        stage('Deploy to Vercel') {
+        stage('Test') {
+            steps {
+                sh 'npm test'
+            }
+        }
+
+        stage('Deploy to Render') {
             steps {
                 script {
-                    withCredentials([string(credentialsId: 'vercel-token', variable: 'VERCEL_TOKEN')]) { 
-                        sh 'npx vercel --prod --token $VERCEL_TOKEN --confirm' 
+                    withCredentials([string(credentialsId: 'render-api-key', variable: 'RENDER_API_KEY')]) {
+                        sh '''
+                            curl -X POST "https://api.render.com/v1/services/YOUR_SERVICE_ID/deploys" \
+                                 -H "Authorization: Bearer $RENDER_API_KEY" \
+                                 -H "Content-Type: application/json" \
+                                 -d '{"serviceId": "YOUR_SERVICE_ID"}'
+                        '''
                     }
                 }
             }
         }
     }
 
-    post { 
-        success { 
+    post {
+        success {
             echo "Deployment Successful"
-        }  
-        failure { 
+        }
+        failure {
             echo "Deployment Failed"
         }
     }
